@@ -18,7 +18,7 @@ function setup() {
 }
 
 function draw() {
-  background(0);
+  background(back);
   colorMode(RGB, 1);
   ambientLight(0.2);
   specularColor(1, 1, 1);
