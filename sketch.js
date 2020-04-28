@@ -1,65 +1,149 @@
-let back;
-let rtY;
-let a;
-let len;
-let mona;
-let sound;
+let uy, uz, fy, fz, ay, az, by, bz;
+
 function preload() {
-  mona = loadImage("MonaLisa.jpg");
-  soundFormats('mp3');
-  mySound = loadSound('4AM.mp3');
-} 
+  mySound1 = loadSound('ninja.mp3');
+  mySound2 = loadSound('MMD.mp3');
+}
+let rate=1;
 function setup() {
   createCanvas(windowWidth, windowHeight, WEBGL);
-  len=1200;
-  a=0;
-  rtY=frameCount*0.01;
-  back=0;
+
+  amplitude = new p5.Amplitude();
+  frameRate(rate);
+  
+
 }
 
+let upper_yrot = 0;
+let upper_zrot = 0;
+let forearm_yrot = 0;
+let forearm_zrot = 0;
+let rightarm_yrot = 0;
+let rightarm_zrot = 0;
+let leftarm_yrot = 0;
+let leftarm_zrot = 0;
+
 function draw() {
-  background(back);
-  colorMode(RGB, 1);
-  ambientLight(0.2);
-  specularColor(1, 1, 1);
-  directionalLight(1, 1, 1, 0, 0, -1);
+  background(255,0,0);
+      if (keyIsPressed === true) {
+  background(random(0,255),random(0,255),random(0,255));
+  }
+  lights();
 
-  let r = map(mouseX, 0, width, -radians(180), radians(180)); 
-  rotateY(rtY);
 
+/*  upper_yrot = radians(slider_uy.value());
+  upper_zrot = radians(slider_uz.value());
+  forearm_yrot = radians(slider_fy.value());
+  forearm_zrot = radians(slider_fz.value());
+  rightarm_yrot = radians(slider_ay.value());
+  rightarm_zrot = radians(slider_az.value());
+  leftarm_yrot = radians(slider_by.value());
+  leftarm_zrot = radians(slider_bz.value()); */
+  // rotate entire scene to make it visible
+
+  upper_yrot = 0;
+  upper_zrot = random(-180,180);
+  forearm_yrot = random();
+  forearm_zrot = random(-180,180);
+  rightarm_yrot = random(-90,0);
+  rightarm_zrot = random(-180,180);
+  leftarm_yrot = random(-90,90);
+  
+  
+ rotateX(radians(70));
+// draw a grid on xy plane
   noStroke();
-  beginShape();
-  texture(mona);
-  plane(457, 600, 100, 100);
-  endShape();
+  fill(180);
+  push();
+  fill(100);
+  plane(1000); // plane is drawn on xy plane
+  pop();
+  
+  push();
+// upper arm
+  fill(255, 100, 25); // magenta
 
-  let h = map(mouseY, 0, height, 0, 100);
-  colorMode(HSB, 360, 100, 100, 100);
+  transformAndRnderRobotBody(upper_yrot, upper_zrot);
+// forearm
+  push();
+  fill(250, 225, 225); // cyan
+  translate(0, 0, 50);
 
-  fill(h);
-  stroke(0, 0, 100);
-  translate(0,-300,0);
-  box(457, len, 200);
-  if(a==1&&len>0){
-      len=len-2;
-  }
-  if(len==0){
-    rtY=frameCount*0.01;
-    back=random(0,100);
-  }
-  if(a==2){
-    rtY=frameCount*0.1;
-  }
+  transformAndRnderRobotBody(forearm_yrot, forearm_zrot);
+  
+  push();
+  translate(0,0,70);
+  sphere(20);
+  
+  pop();
+  
+  push();
+  fill(255, 255, 0); // cyan
+  translate(20, 0, 20);  
+  transformAndRnderRobotArm(rightarm_yrot, rightarm_zrot);
+  pop();
+  push();
+  fill(255, 200, 0); // cyan
+  translate(-20, 0, 20);  
+  transformAndRnderRobotArm(leftarm_yrot, leftarm_zrot);
+  pop();
+  pop();
+  pop();
+ 
+
+  
+}
+
+function transformAndRnderRobotBody(yrot, zrot) {
+  strokeWeight(1);
+  stroke(255, 0, 0);
+  rotateY(yrot);
+  stroke(0, 255, 0);
+  rotateZ(zrot);
+  stroke(0, 0, 255);
+  noStroke();
+  translate(0, 0, 50);
+  box(30, 30, 100);
+// The above axis visualization is to show about which axis
+// each rotation rotates
+}
+
+function transformAndRnderRobotArm(yrot, zrot) {
+  strokeWeight(1);
+  stroke(255, 0, 0);
+  rotateY(yrot);
+  stroke(0, 255, 0);
+  rotateZ(zrot);
+  stroke(0, 0, 255);
+  noStroke();
+  translate(0, 0, 50);
+  box(20, 20, 100);
+// The above axis visualization is to show about which axis
+// each rotation rotates
 }
 
 function mousePressed() {
-  if (mySound.isPlaying()) {
-      a=1;
-  } else {
-    mySound.play();
+  if (mySound2.isPlaying()) {
+   
+    if(rate==1){
+   rate=10;
+   frameRate(rate);
+    }
+    
+  else if (rate==10){
+   rate=3; 
+   frameRate(rate); 
+    }
+    
+  else if (rate==3){
+   rate=10; 
+   frameRate(rate); 
+    }
+  } 
+    else if (rate==1) {
+   mySound2.play();
+    
   }
   
-  if(a==1&&len==0){
-    a=2;
-  }
 }
+
