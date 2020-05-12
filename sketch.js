@@ -1,149 +1,89 @@
-let uy, uz, fy, fz, ay, az, by, bz;
+let slider_hue, slider_angle, slider_conc;
+let i,n,na;
+let high=200;
+let a=0;
 
-function preload() {
-  mySound1 = loadSound('ninja.mp3');
-  mySound2 = loadSound('MMD.mp3');
+let statue; let spotPos1, spotPos2, spotDir1, spotDir2, spotDir3, modelPos, modelPos2, modelPos3, modelPos4;
+let mrot, srot;
+
+function preload() { 
+ //statue = loadModel("venus_polygonal_statue.obj");
+  statue = loadModel("jellyfish.obj");
+  mySound = loadSound('On.mp3');
 }
-let rate=1;
-function setup() {
+
+function setup() { 
   createCanvas(windowWidth, windowHeight, WEBGL);
+  //slider_hue = createSlider(0, 360, 0); slider_hue.position(10, 10);
+  slider_hue=0;
+  high = createSlider(0, 400, 20);
+  high.position(10, 30);
+  n = createSlider(1, 1000, 5); 
+  n.position(10, 50);
 
-  amplitude = new p5.Amplitude();
-  frameRate(rate);
+  spotPos2 = new p5.Vector(0, 200, 200);
   
-
+  modelPos = new p5.Vector(0, 0, 0);
+  modelPos1 = new p5.Vector(-50, 50, 0);
+  modelPos2 = new p5.Vector(50, 50, 0);
+  modelPos3 = new p5.Vector(50, -50, 0);
+  modelPos4 = new p5.Vector(-50, -50, 0);
+  mrot = 0; 
+  srot = 0;
 }
 
-let upper_yrot = 0;
-let upper_zrot = 0;
-let forearm_yrot = 0;
-let forearm_zrot = 0;
-let rightarm_yrot = 0;
-let rightarm_zrot = 0;
-let leftarm_yrot = 0;
-let leftarm_zrot = 0;
-
-function draw() {
-  background(255,0,0);
-      if (keyIsPressed === true) {
-  background(random(0,255),random(0,255),random(0,255));
-  }
+function draw() { 
+  colorMode(RGB);
+  background(0);
   lights();
-
-
-/*  upper_yrot = radians(slider_uy.value());
-  upper_zrot = radians(slider_uz.value());
-  forearm_yrot = radians(slider_fy.value());
-  forearm_zrot = radians(slider_fz.value());
-  rightarm_yrot = radians(slider_ay.value());
-  rightarm_zrot = radians(slider_az.value());
-  leftarm_yrot = radians(slider_by.value());
-  leftarm_zrot = radians(slider_bz.value()); */
-  // rotate entire scene to make it visible
-
-  upper_yrot = 0;
-  upper_zrot = random(-180,180);
-  forearm_yrot = random();
-  forearm_zrot = random(-180,180);
-  rightarm_yrot = random(-90,0);
-  rightarm_zrot = random(-180,180);
-  leftarm_yrot = random(-90,90);
+  camera(0, 190, 80, 0, 0, 0, 0, 1, 0);
+// setup lighting
+  spotPos1 = new p5.Vector(0, 0, high.value());
+  srot += 0.1; 
+  slider_hue += 10;
+  spotPos1.x = 200*cos(srot);
+  spotPos1.y = 200*sin(srot);
+  spotPos2.x = 200*cos(srot);
+  spotPos2.y = 200*sin(srot);
+  spotDir1 = p5.Vector.sub(modelPos1, spotPos1);
+  spotDir2 = p5.Vector.sub(modelPos2, spotPos1);
+  spotDir3 = p5.Vector.sub(modelPos3, spotPos1);
+  spotDir4 = p5.Vector.sub(modelPos4, spotPos1);
   
-  
- rotateX(radians(70));
-// draw a grid on xy plane
-  noStroke();
-  fill(180);
-  push();
-  fill(100);
-  plane(1000); // plane is drawn on xy plane
-  pop();
-  
-  push();
-// upper arm
-  fill(255, 100, 25); // magenta
-
-  transformAndRnderRobotBody(upper_yrot, upper_zrot);
-// forearm
-  push();
-  fill(250, 225, 225); // cyan
-  translate(0, 0, 50);
-
-  transformAndRnderRobotBody(forearm_yrot, forearm_zrot);
-  
-  push();
-  translate(0,0,70);
-  sphere(20);
-  
-  pop();
-  
-  push();
-  fill(255, 255, 0); // cyan
-  translate(20, 0, 20);  
-  transformAndRnderRobotArm(rightarm_yrot, rightarm_zrot);
-  pop();
-  push();
-  fill(255, 200, 0); // cyan
-  translate(-20, 0, 20);  
-  transformAndRnderRobotArm(leftarm_yrot, leftarm_zrot);
-  pop();
-  pop();
-  pop();
+  colorMode(HSB, 360, 100, 100); 
+  na=n.value();
+  for(i=0; i<na; i++){
+  spotLight(slider_hue%360+i, 100, 100, spotPos1, spotDir1, 30,
+  170);
+  spotLight(slider_hue%360+i*40, 100, 100, spotPos1, spotDir2, 30, 170);
+  spotLight(slider_hue%360+i*80, 100, 100, spotPos1, spotDir3, 30, 170);
+  spotLight(slider_hue%360+i*120, 100, 100, spotPos1, spotDir4, 30,170);
+  }
  
-
-  
-}
-
-function transformAndRnderRobotBody(yrot, zrot) {
-  strokeWeight(1);
-  stroke(255, 0, 0);
-  rotateY(yrot);
-  stroke(0, 255, 0);
-  rotateZ(zrot);
-  stroke(0, 0, 255);
+//directionalLight(slider_hue.value(), 100, 100, spotDir1);
+// draw a grid on xy plane colorMode(RGB);
   noStroke();
-  translate(0, 0, 50);
-  box(30, 30, 100);
-// The above axis visualization is to show about which axis
-// each rotation rotates
-}
-
-function transformAndRnderRobotArm(yrot, zrot) {
-  strokeWeight(1);
-  stroke(255, 0, 0);
-  rotateY(yrot);
-  stroke(0, 255, 0);
-  rotateZ(zrot);
-  stroke(0, 0, 255);
-  noStroke();
-  translate(0, 0, 50);
-  box(20, 20, 100);
-// The above axis visualization is to show about which axis
-// each rotation rotates
+  fill(50);
+  push();
+  plane(1000, 1000, 200, 200); // plane is drawn on xy plane
+  pop();
+// draw statue 
+  push();
+  translate(modelPos);
+  rotateX(PI / 2);
+  rotateY(mrot);
+  fill(255);
+  model(statue);  
+  ellipsoid(30, 60, 60);
+  pop();
+  if(a==1)
+  mrot += 0.02;
 }
 
 function mousePressed() {
-  if (mySound2.isPlaying()) {
-   
-    if(rate==1){
-   rate=10;
-   frameRate(rate);
+    if (mySound.isPlaying()){
+    a=1;
     }
-    
-  else if (rate==10){
-   rate=3; 
-   frameRate(rate); 
-    }
-    
-  else if (rate==3){
-   rate=10; 
-   frameRate(rate); 
-    }
-  } 
-    else if (rate==1) {
-   mySound2.play();
-    
-  }
-  
+  else
+  mySound.play();
 }
-
