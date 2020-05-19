@@ -78,6 +78,17 @@ function draw() {
   background(0.2,0.2,0.9);
   randomSeed(1);
   lights();
+  
+    if (keyIsPressed==true) {
+  if (buho==1) {
+  buho=-1;
+  }
+  else{
+  buho=1;
+  }
+}
+  
+  
   camera(high.value()*cos(angle/50), what.value(), n.value()*sin(angle/50), 0, 0, 0, 0, 10, 0);
   angle=angle+(buho)*speed.value()/100;
   /*
@@ -249,12 +260,3 @@ function draw() {
     resetMap();
 }
 
-function mousePressed() {
-  if (buho==1) {
-  buho=-1;
-  }
-  else{
-  buho=1;
-  }
-  
-}
