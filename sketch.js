@@ -1,262 +1,528 @@
-let building_sl, speed, godo;
-let CITY_SIZE = 800;
-let BUILDING_MAX_SIZE = 40;
-let gridSz = CITY_SIZE / BUILDING_MAX_SIZE;
-let map = [];
+let sliderGroup = [];
+let X;
+let Y;
+let Z;
+let centerX;
+let centerY;
+let centerZ;
+let h = 20;
+let rot=0;
+let turnflag=0;
+let keyflag=0;
+let endflag=0;
+let esflag=0;
+let planelen=500;
+let flag=0;
 
+let cX, cY, cZ; // 방향키에 따른 x, z 증가 변수
+let pX, pY, pZ; // 캐릭터 위치
+let rX, rY, rZ;
+let sX, sY, sZ;
+let zY;
 
-let slider_hue, slider_angle, slider_conc;
-let i,n,na;
-let what;
-let high=200;
+let pastH, preH;
+let b1_front, b2_front, b3_front, b4_front;
+let b1_side, b2_side, etc;
+let book_front, book_side;
+let box_front, box_side;
+let cha_front, cha_side;
+let cha_front_2, cha_side_2;
+let dir=-1;
+
 let a=0;
-let buho=1;
-
-let statue; let spotPos1, spotPos2, spotDir1, spotDir2, spotDir3, modelPos, modelPos2, modelPos3, modelPos4;
-let mrot, srot;
-
-let angle=0;
-
-let myFont;
+let b=0;
 
 function preload() {
-  myFont = loadFont('ARIALBI.TTF');
+  
+  pastH = loadImage("house_past_2.png");
+  preH = loadImage("house_pre.png");
+  b1_front = loadImage("b1_front_2.png");
+  b2_front = loadImage("b2_front_2.png");
+  b3_front = loadImage("b3_front_2.png");
+  b4_front = loadImage("b4_front_2.png");
+  
+  b1_side = loadImage("b1_side.png");
+  b2_side = loadImage("b2_side.png");
+  etc = loadImage("etc.png");
+  book_front = loadImage("bookshelf_front_2.png");
+  book_side = loadImage("bookshelf_side.png");
+  
+  box_front = loadImage("box_front.png");
+  box_side = loadImage("box_side.png");
+  
+  cha_front = loadImage("cha_front.png");
+  cha_side = loadImage("cha_side.png");
+  cha_front_2 = loadImage("cha_front_2.png");
+  cha_side_2 = loadImage("cha_side_2.png");
+  
+  ending = loadImage("clear.png");
+  
+  BGM = loadSound('tokka.m4a');
+  endingBGM = loadSound('Ending.mp3');
 }
 
-function resetMap() {
-  for (let i = 0; i < gridSz; i++)
-  for (let j = 0; j < gridSz; j++) {
-  map[i][j] = false;
-  }
-}
 
 function setup() {
   createCanvas(windowWidth, windowHeight, WEBGL);
   colorMode(RGB,1);
+  angleMode(DEGREES);
+ BGM.loop();
+ perspective(5, width/height,((height/2.0) / tan(30))/10.0, ((height/2.0) / tan(30))*10.0);
   
-    textFont(myFont);
-  textSize(30);
-  fill(0);
-  text('delevopment', 0, 20);
-  
-// init map
-  for (let i = 0; i < gridSz; i++) {
-    map[i] = [];
-  for (let j = 0; j < gridSz; j++) {
-    map[i][j] = false;
+   for (var i = 0; i < 6; i++) {
+    if (i === 2) {
+      sliderGroup[i] = createSlider(10, 8000,7000);
+    } 
+    else if (i === 1) {
+      sliderGroup[i] = createSlider(-2000, 2000, 150);
+    }else {
+      sliderGroup[i] = createSlider(-2000, 2000, 0);
     }
+    h = map(i, 0, 6, 5, 85);
+    sliderGroup[i].position(10, h);
+     h+=20;
+    //sliderGroup[i].style('width', '80px');
+     
   }
-  resetMap();
-  building_sl = createSlider(1, 200, 200);
-  building_sl.position(10, 30);
 
-  speed = createSlider(0, 200, 20);
-  speed.position(10, 50);
-  godo = createSlider(20, 380, 90);
-  godo.position(10, 70);
-  what = createSlider(-500, 80, 0);
-  what.position(10, 130);
-
-  high = createSlider(50, 1000, 700);
-  high.position(10, 90);
-  n = createSlider(50, 1000, 300); 
-  n.position(10, 110);
-
-  spotPos2 = new p5.Vector(0, 2000, 2000);
-  
-  modelPos = new p5.Vector(0, 0, 0);
-  modelPos1 = new p5.Vector(-5000, 5000, 0);
-  modelPos2 = new p5.Vector(5000, 5000, 0);
-  modelPos3 = new p5.Vector(5000, -5000, 0);
-  modelPos4 = new p5.Vector(-5000, -5000, 0);
-  mrot = 0; 
-  srot = 0;
-  
+  Z = 5850;
+  cX = 0;
+  cY = 0; 
+  cZ = 0;
+  pX = 300;
+  pY = 113; 
+  pZ = 300;
 }
 
 function draw() {
-  background(0.2,0.2,0.9);
-  randomSeed(1);
-  lights();
-  
-    if (keyIsPressed==true) {
-  if (buho==1) {
-  buho=-1;
-  }
-  else{
-  buho=1;
-  }
-}
-  
-  
-  camera(high.value()*cos(angle/50), what.value(), n.value()*sin(angle/50), 0, 0, 0, 0, 10, 0);
-  angle=angle+(buho)*speed.value()/100;
-  /*
-// setup lighting
-  spotPos1 = new p5.Vector(0, 0, high.value());
-  srot += 0.1; 
-  slider_hue += 10;
-  spotPos1.x = 200*cos(srot);
-  spotPos1.y = 200*sin(srot);
-  spotPos2.x = 200*cos(srot);
-  spotPos2.y = 200*sin(srot);
-  spotDir1 = p5.Vector.sub(modelPos1, spotPos1);
-  spotDir2 = p5.Vector.sub(modelPos2, spotPos1);
-  spotDir3 = p5.Vector.sub(modelPos3, spotPos1);
-  spotDir4 = p5.Vector.sub(modelPos4, spotPos1);
-  
-  colorMode(HSB, 360, 100, 100); 
-  na=n.value();
-  for(i=0; i<na; i++){
-  spotLight((slider_hue+i)%360, 100, 100, spotPos1, spotDir1, 30,
-  170);
-  spotLight((slider_hue+i*40)%360, 100, 100, spotPos1, spotDir2, 30, 170);
-  spotLight((slider_hue+i*80)%360, 100, 100, spotPos1, spotDir3, 30, 170);
-  spotLight((slider_hue+i*120)%360, 100, 100, spotPos1, spotDir4, 30,170);
-  }
-  */
-  translate(0,godo.value(),0);
-  directionalLight(1, 1, 0, 0, 1, 0.3);
-  rotateX(PI*49/100);
-  //rotateX(radians(rotateX_sl.value()));
-  //rotateZ(radians(rotateZ_sl.value()));
-  fill(0.2);
-  plane(1000, 1000); // draw ground
-  fill(0.5);
-  noStroke();
-  let nBuildings = building_sl.value();
-  translate(-CITY_SIZE / 2, -CITY_SIZE / 2);
+  if(turnflag==0) background(0.5,0.5,0.7);
+  else if(turnflag==1) background(0.7,0.5,0.5);
+  //lights();
+  X = sliderGroup[0].value();
+  Y = sliderGroup[1].value();
+  centerX = sliderGroup[3].value();
+  centerY = sliderGroup[4].value();
+  centerZ = sliderGroup[5].value();
+  rX = pX+cX;
+  rY = pY+cY;
+  rZ = pZ+cZ;
+  zX = constrain(rX, 20, 313);
 
-  for (let i = 0; i < nBuildings/4; i++) {
-    let foundEmptySpot = false;
-    let x1 = 0;
-    let y1 = 0;
-// loop until it finds an empty spot
-    while (foundEmptySpot == false) {
-      x1 = floor(random(0, (gridSz/2)-1));
-      y1 = floor(random(0, gridSz/2));
-        if (map[x1][y1] == false) {
-        foundEmptySpot = true;
-        map[x1][y1] = true;
-        }
-    }
-// randomly determine building dimensions
-    let w1 = random(10, BUILDING_MAX_SIZE);
-    let h1 = random(10, BUILDING_MAX_SIZE);
-    let d1 = random(40, 100); // building height
-// render a building
-    push();
-    translate(x1 * BUILDING_MAX_SIZE, y1 * BUILDING_MAX_SIZE, d1 / 2);
-    box(w1, h1, d1);
-    pop();
-  }
-  resetMap();
-  
-  for (let i = 0; i < nBuildings/4; i++) {
-    let foundEmptySpot = false;
-    let x2 = 0;
-    let y2 = 0;
-  while (foundEmptySpot == false) {
-    x2 = floor(random((gridSz/2)+1, gridSz));
-    y2 = floor(random((gridSz/2)+1, gridSz));
-  if (map[x2][y2] == false) {
-    foundEmptySpot = true;
-    map[x2][y2] = true;
-    }
-  }
-// randomly determine building dimensions
-  let w2 = random(10, BUILDING_MAX_SIZE*1.5);
-  let h2 = random(10, BUILDING_MAX_SIZE*1.5);
-  let d2 = random(10, 20); // building height
-// render a building
-  push();
-  translate(x2 * BUILDING_MAX_SIZE, y2 * BUILDING_MAX_SIZE, d2 / 2);
-  box(w2, h2, d2);
-  let ran;
-  ran=random(0,100);
-    if(ran<20){
-      translate(random(-2,10),random(-2,10), random(-2,2));
-      box(5, 5, random(d2*5));
-    }  
-  pop();
-  } 
-  resetMap();
-
-  for (let i = 0; i < nBuildings/4; i++) {
-    let foundEmptySpot = false;
-    let x3 = 0;
-    let y3 = 0;
-  while (foundEmptySpot == false) {
-    x3 = floor(random(gridSz/2, gridSz));
-    y3 = floor(random(0, gridSz/2));
-    if (map[x3][y3] == false) {
-      foundEmptySpot = true;
-      map[x3][y3] = true;
-    }
-  }
-// randomly determine building dimensions
-  let w3 = random(10, BUILDING_MAX_SIZE/2);
-  let h3 = random(10, BUILDING_MAX_SIZE/2);
-  let d3 = random(nBuildings/2, nBuildings+100); // building height
-// render a building
-  push();
-  translate(x3 * BUILDING_MAX_SIZE, y3 * BUILDING_MAX_SIZE, d3 / 2);
-  rotateX(7.85);
-  cylinder(w3, d3, floor(random(3,8)),1);
-  pop();
-  }
-  resetMap();
-  
-  for (let i = 0; i < nBuildings/4; i++) {
-    let foundEmptySpot = false;
-    let x4 = 0;
-    let y4 = 0;
-  while (foundEmptySpot == false) {
-    x4 = floor(random(0, gridSz/2));
-    y4 = floor(random(gridSz/2, gridSz));
-  if (map[x4][y4] == false) {
-    foundEmptySpot = true;
-    map[x4][y4] = true;
-    }
-  }
-// randomly determine building dimensions
-  let w4 = random(10, BUILDING_MAX_SIZE/2);
-  let h4 = random(10, BUILDING_MAX_SIZE/2);
-  let d4 = random(10, 60); // building height
-// render a building
-  push();
-  translate(x4 * BUILDING_MAX_SIZE, y4 * BUILDING_MAX_SIZE, d4 / 2);
-
-  ellipsoid(w4, h4, d4,floor(random(3,8)) , 2);
-  ellipsoid(w4+10, h4+10, d4/2 ,floor(random(3,8)) , 2);  
-  rotateZ(7.85);    
-  pop();
-  } 
-  resetMap();
+  camera(X, Y, Z, centerX, centerY, centerZ, 0, 1, 0);
     
-  for (let i = 0; i < nBuildings; i++) {
-    let foundEmptySpot = false;
-    let x5 = 0;
-    let y5 = 0;
-  while (foundEmptySpot == false) {
-    x5 = floor(random(0, gridSz));
-    y5 = floor(random(0, gridSz));
-    if (map[x5][y5] == false) {
-      foundEmptySpot = true;
-      map[x5][y5] = true;
-    }
+  if(endflag==1){
+  endingseq();
   }
-// randomly determine building dimensions
-  let w5 = random(10, BUILDING_MAX_SIZE/2);
-  let h5 = random(10, BUILDING_MAX_SIZE/2);
-  let d5 = random(10, 60); // building height
-// render a building
-  push();
-  translate(x5 * BUILDING_MAX_SIZE, y5 * BUILDING_MAX_SIZE, 400);
-  rotateX(7.85);
-  sphere(d5);
-  pop();
-  } 
-    resetMap();
+
+  else if(endflag==0) {
+  
+  changingside();
+  
+  mapping();
+  
+  makeplane(planelen);
+  
+  
+  if(rY<200){
+  makePlayer(zX, rY, rZ); 
+  }
+  else if(rY>=200){
+  cX = 0;
+  cY = 0; 
+  cZ = 0;
+  pX = 300;
+  pY = 104; 
+  pZ = 300;
+  makePlayer(zX, rY, rZ);   
+  }
+  platformrule();
+  }
 }
 
+function makeplane(length) {
+  noStroke();
+  fill(0.2);
+  translate(length/2,0,0);
+  texture(pastH);
+  plane(length,length);
+  translate(-length/2,0,length/2);
+  rotateY(90);
+  fill(0.8);
+  texture(preH);
+  plane(length,length);
+  rotateY(-90);
+  translate(0,0,-length/2);
+}
+
+function changingside(){
+if(keyIsPressed==true){
+  if(keyCode == "32") keyflag=1;
+  }
+  if(keyflag==1){
+  if(turnflag==0){
+   if(rot>-90){   
+    rotateY(rot); 
+      rot-=3;
+   }
+    if(rot==-90){
+    turnflag=1;
+    keyflag=0;
+    rot=0;
+    }
+  }
+    if(turnflag==1){
+      if(rot<90){
+        rotateY(rot);
+        rot+=3;
+      }
+      if(rot==90){
+        turnflag=0;
+        keyflag=0;
+        rot=0;
+      }
+  }
+  }
+  
+  if(turnflag==1){
+  rotateY(-90);
+  }
+  if(turnflag==0){
+  rotateY(0);
+  }
+}
+
+function mapping(){
+  
+  //1층
+  push();
+  drawFaceBox(255, 134, 350,50,7,350, b1_front, b1_side, etc);
+  pop();
+  push();
+  fill(1,0,1);
+  translate(280,137,175);
+  box(49,5,349);
+  pop();
+  
+  push();
+  drawFaceBox(0, 134, 325,200,7,50, b2_front, b2_side, etc);
+  pop();
+  push();
+  fill(1,0,1);
+  translate(100,137,300);
+  box(199,5,49);
+  pop();
+  
+  //2층
+  push();
+  drawFaceBox(0, 6, 350,125,7,350, b3_front, b1_side, etc);
+  pop();
+  push();
+  fill(1,0,1);
+  translate(62.5,9,175);
+  box(124,5,349);
+  pop();
+  
+  push();
+  drawFaceBox(190,6,350,160,7,350, b4_front, b1_side, etc);
+  pop();
+  push();
+  fill(1,0,1);
+  translate(270,9,175);
+  box(149,5,349);
+  pop();
+  
+  //책장
+  push();
+  drawFaceBox(75,63,275,50,70,50, book_front, book_front, book_side);
+  pop();
+  push();
+  fill(1,0,1);
+  translate(100,98,250);
+  box(49,69,49)
+  pop();
+  
+  //상자
+  push();
+  drawFaceBox_2(265,-25,60,60,30,30,box_front, box_side, book_side)
+  pop();
+  push();
+  translate(295,-10,45);
+  box(59,29,29);
+  pop();
+}
+
+function makePlayer(x, y, z) {
+  
+  if(turnflag == 0){
+      if(keyIsDown(RIGHT_ARROW)) { 
+        if(sX<313) cX += 1;
+      }
+      else if (keyIsDown(LEFT_ARROW)) {
+        if(25<sX) cX -= 1;
+      }
+      else if (keyIsDown(UP_ARROW)) {
+      if(-15<y&&20<sX&&sX<60) cY -= 1;
+    }
+      else if (keyIsDown(DOWN_ARROW)) {
+      if(-15<y&&20<sX&&sX<60) cY += 1;
+    }
+    }
+    
+    else if (turnflag == 1) {
+      if(keyIsDown(RIGHT_ARROW)){ 
+        if(25<sZ) {
+           if(105<rY){
+            if(278<sZ||209>=sZ) cZ -= 1;
+          }
+          else if(105>=rY){
+            if(70<sZ) cZ -= 1;
+          }
+          else cZ -= 1;
+        }
+        }
+      else if (keyIsDown(LEFT_ARROW)) {
+        if(sZ<313){ 
+          if(105<rY){
+            if(278<=sZ||209>sZ) cZ += 1;
+          }
+          else cZ+=1;
+           
+        }
+      }
+    } 
+ 
+  push();
+  fill(0,0,0);
+  if(turnflag==0){
+    if(flag==0){
+  translate(x,y,pZ);
+  sX=x;
+    }
+    if(flag==1){
+      if(105<rY){
+        sX=(326-sZ)+cX;
+        translate(sX,y,pZ);
+        cZ=0;
+      }
+      else if(105>=rY){
+        sX=(335-sZ)+cX;
+        translate(sX,y,pZ); 
+        cZ=0;
+      }
+    }
+    
+  }
+  else if(turnflag==1){
+    if(105<rY){
+      sZ=(333-sX)+cZ;
+      translate(pX,y,sZ);
+      flag=1;
+      cX=0;
+    }
+    else if(105>=rY){
+      sZ=(335-sX)+cZ;
+      translate(pX,y,sZ);
+      cX=0;
+    }
+  }
+  box(21,43,21);
+  
+  if(keyIsDown(LEFT_ARROW)) {dir=0;}
+  else if(keyIsDown(RIGHT_ARROW)) {dir=1;}
+  
+  if(dir==-1){
+  drawFaceBox_3(-10, -20, 11, 22,44,22, cha_front, cha_side, book_side);
+  }
+  
+  else if(dir==0 || keyIsDown(LEFT_ARROW)){
+     drawFaceBox_3(-10, -20, 11, 22,44,22, cha_front, cha_side, book_side);
+  }
+  else if(dir==1 || keyIsDown(RIGHT_ARROW)){
+  drawFaceBox_3(-10, -20, 11, 22,44,22, cha_front_2, cha_side_2, book_side);
+  }
+  pop();
+  
+/*  push();
+  drawFaceBox_3(sX-10, y-20, sZ+11 ,22,44,22, cha_front, cha_side, book_side);
+  pop(); */
+  }
+
+function platformrule(){
+  if(110<rY){
+  if(210<sX&&sX<245){
+     cY+=9;
+  }
+  }
+  else if(120>=rY){
+  if(130<sX&&180>sX){
+     cY+=9;
+  }
+  else if(sX>260){
+  endflag=1;
+  }
+  }
+}
+
+
+function drawFaceBox(a1, a2, a3, boxWidth, boxHeight, boxDepth, frontTexture, sideTexture, etc) {
+  let wid = boxWidth;
+  let hei = boxHeight;
+  let dim = boxDepth;
+  let a= a1;
+  let b= a2;
+  let c=a3;
+  push();
+  translate(a,b,c);
+  //front
+  push();
+  texture(frontTexture);
+  quad(0,0, wid,0,wid,hei, 0, hei);
+  pop();
+  //left
+  push();
+  texture(sideTexture);
+  rotateY(90);
+  quad(0, 0,0, dim, 0,0,dim, hei,0, 0, hei,0);
+  pop();
+  //right
+  push();
+  texture(sideTexture);
+  translate(wid, 0, 0);
+  rotateY(90);
+  quad(0, 0,0, dim, 0,0, dim, hei,0, 0, hei,0);
+  pop();
+  //bottom
+  push();
+  texture(etc);
+  translate(0, hei, 0);
+  rotateX(-90);
+  quad(0, 0, wid, 0, wid, dim, 0, dim);
+  pop();
+  //back
+  push();
+  texture(etc);
+  rotateY(180);
+  translate(-wid, 0, dim);
+  quad(0, 0,0, wid, 0,0, wid, hei,0, 0,hei,0);
+  //top
+  push();
+  texture(etc);
+  translate(0, 0,-dim);
+  rotateX(90);
+  quad(0, 0, wid, 0, wid, dim, 0, dim);
+  pop();
+  pop();
+}
+
+function drawFaceBox_2(a1, a2, a3, boxWidth, boxHeight, boxDepth, frontTexture, sideTexture, etc) {
+  let wid = boxWidth;
+  let hei = boxHeight;
+  let dim = boxDepth;
+  let a= a1;
+  let b= a2;
+  let c=a3;
+  push();
+  translate(a,b,c);
+  //front
+  push();
+  texture(frontTexture);
+  quad(0,0, wid,0,wid,hei, 0, hei);
+  pop();
+  //left
+  push();
+  texture(etc);
+  rotateY(90);
+  quad(0, 0,0, dim, 0,0,dim, hei,0, 0, hei,0);
+  pop();
+  //right
+  push();
+  texture(sideTexture);
+  translate(wid, 0, 0);
+  rotateY(90);
+  quad(0, 0,0, dim, 0,0, dim, hei,0, 0, hei,0);
+  pop();
+  //bottom
+  push();
+  texture(etc);
+  translate(0, hei, 0);
+  rotateX(-90);
+  quad(0, 0, wid, 0, wid, dim, 0, dim);
+  pop();
+  //back
+  push();
+  texture(etc);
+  rotateY(180);
+  translate(-wid, 0, dim);
+  quad(0, 0,0, wid, 0,0, wid, hei,0, 0,hei,0);
+  //top
+  push();
+  texture(etc);
+  translate(0, 0,-dim);
+  rotateX(90);
+  quad(0, 0, wid, 0, wid, dim, 0, dim);
+  pop();
+  pop();
+}
+
+function drawFaceBox_3(a1, a2, a3, boxWidth, boxHeight, boxDepth, frontTexture, sideTexture, etc) {
+  let wid = boxWidth;
+  let hei = boxHeight;
+  let dim = boxDepth;
+  let a= a1;
+  let b= a2;
+  let c=a3;
+  push();
+  translate(a,b,c);
+  //front
+  push();
+  texture(frontTexture);
+  quad(0,0, wid,0,wid,hei, 0, hei);
+  pop();
+  //left
+  push();
+  texture(etc);
+  rotateY(90);
+  quad(0, 0,0, dim, 0,0,dim, hei,0, 0, hei,0);
+  pop();
+  //right
+  push();
+  texture(sideTexture);
+  translate(wid, 0, 0);
+  rotateY(90);
+  quad(0, 0,0, dim, 0,0, dim, hei,0, 0, hei,0);
+  pop();
+  //bottom
+  push();
+  texture(etc);
+  translate(0, hei, 0);
+  rotateX(-90);
+  quad(0, 0, wid, 0, wid, dim, 0, dim);
+  pop();
+  //back
+  push();
+  texture(etc);
+  rotateY(180);
+  translate(-wid, 0, dim);
+  quad(0, 0,0, wid, 0,0, wid, hei,0, 0,hei,0);
+  //top
+  push();
+  texture(etc);
+  translate(0, 0,-dim);
+  rotateX(90);
+  quad(0, 0, wid, 0, wid, dim, 0, dim);
+  pop();
+  pop();
+}
+
+function endingseq(){
+  background(0,0,0);
+  translate(0,0,0);
+  plane(400,400);
+  texture(ending);
+  BGM.stop();  
+  if(esflag==0){
+  endingBGM.loop();
+  esflag=1;
+  }
+  if(Z>3850) Z=Z-2;
+  }
