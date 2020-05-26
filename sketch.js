@@ -58,7 +58,7 @@ function preload() {
   
   ending = loadImage("clear.png");
   
-  BGM = loadSound('tokka.m4a');
+  BGM = loadSound('tokka.mp3');
   endingBGM = loadSound('Ending.mp3');
 }
 
