@@ -10,6 +10,7 @@ let rot=0;
 let turnflag=0;
 let keyflag=0;
 let endflag=0;
+let bgmflag=0;
 let esflag=0;
 let planelen=500;
 let flag=0;
@@ -95,6 +96,10 @@ function setup() {
 }
 
 function draw() {
+  if(bgmflag==0){ 
+  BGM.loop();
+  bgmflag=1;
+  }
   if(turnflag==0) background(0.5,0.5,0.7);
   else if(turnflag==1) background(0.7,0.5,0.5);
   //lights();
