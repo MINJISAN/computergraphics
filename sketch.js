@@ -67,7 +67,7 @@ function setup() {
   createCanvas(windowWidth, windowHeight, WEBGL);
   colorMode(RGB,1);
   angleMode(DEGREES);
- BGM.loop();
+ //BGM.loop();
  perspective(5, width/height,((height/2.0) / tan(30))/10.0, ((height/2.0) / tan(30))*10.0);
   
    for (var i = 0; i < 6; i++) {
