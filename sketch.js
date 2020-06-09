@@ -1,3 +1,17 @@
+let teapot;
+let envShader, skyboxShader;
+let badak;
+let img = [];
+let gl; // WebGL pointer
+let tex, texLoc;
+let high=240;
+let flag=0;
+let high_flag=0;
+let holy_flag=0;
+let esflag=0;
+let amb_l = 255;
+
+
 let cam_x, cam_y, cam_z;
 let cam_cx, cam_cy, cam_cz;
 
@@ -5,227 +19,391 @@ let cam_dx, cam_dy, cam_dz;
 let tilt;
 let pan;
 
+let pp = [];
+
 let ranx,rany;
 
 let cam_bx, cam_by, cam_bz;
 let cam_qx, cam_qy, cam_qz;
 
-const WORLD_SIZE = 1000;
-let cvs = [];
-let pcvs = [];
-let fcvs = [];
-
-let songcode=0;
-let timeflag=0;
-let wall;
-let sd;
-let w, h, ph, fh;
-/*
-class Building {
-  constructor(x, y, w, d, h) {
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.d = d;
-    this.h = h;
-  }
-  
-  render() {
-    push();
-    translate(this.x, this.y, this.h / 2);
-  stroke(0);
-  strokeWeight(3);
-  fill(255);
-  box(this.w, this.d, this.h);
-  pop();
-  }
-}
-*/
+let mic;
 
 function preload() {
+  //teapot = loadModel('teapot.obj');
+  envShader = loadShader('envmap.vert', 'envmap.frag');
+  skyboxShader = loadShader('skybox.vert', 'skybox.frag');
   
-  stone = loadImage("stone-1.png");
-  B = loadSound("B.wav");
-  A = loadSound("A.wav");
-  D = loadSound("D.wav");
-  Ah = loadSound("Ah.wav");
-  GS = loadSound("Gs.wav");
-  MS = loadSound("Ms.wav");
+  // load six cubemap textures
   
+  /*
+  img[0] = loadImage("right.jpg");
+  img[1] = loadImage("left.jpg");
+  img[2] = loadImage("top.jpg");
+  img[3] = loadImage("bottom.jpg");
+  img[4] = loadImage("front.jpg");
+  img[5] = loadImage("back.jpg");
+  */
+
+  img[0] = loadImage("GHY/2-1.jpg");
+  img[1] = loadImage("GHY/2-2.jpg");
+  img[2] = loadImage("assets/bttm.jpg");
+  img[3] = loadImage("assets/bttm.jpg");
+  img[4] = loadImage("GHY/2-3.jpg");
+  img[5] = loadImage("GHY/2-4.jpg");
+  
+  
+  /*
+  img[0] = loadImage("eye/rght.png");
+  img[1] = loadImage("eye/lft.png");
+  img[2] = loadImage("assets/bttm.jpg");
+  img[3] = loadImage("assets/bttm.jpg");
+  img[4] = loadImage("eye/frnt.png");
+  img[5] = loadImage("eye/bck.png");
+  */
+  
+  white = loadImage("white.jpg");
+  badak = loadImage("GHY/2.jpg");
+  
+  head = loadImage("GHY/head.jpg");
+  con = loadImage("GHY/cone2.jpg");
+  wall1 = loadImage("GHY/wall4.jpg");
+  wall2 = loadImage("GHY/wall5.jpg");
+  wall3 = loadImage("GHY/wall6.jpg");
+  wall4 = loadImage("GHY/wall7.jpg");
+  cunjang=loadImage("GHY/cunjang2.jpg");
+  
+  main = loadSound('main2.mp3');
+  comfy = loadSound('comfy2.mp3');
 }
 
-class Caves {
-  constructor(x, y, w, d, h) {
+class people {
+  constructor(x, y) {
     this.x = x;
     this.y = y;
-    this.w = w;
-    this.d = d;
-    this.h = h;
   }
   render() {
-    this.h+=0.007;
-    push();  
-    translate(this.x, this.y, 1000-(this.h/2));
-    stroke(0);
-    strokeWeight(3);
-    fill(255);
-    box(this.w, this.d, this.h);
-    pop();
-    
-    push();  
-    translate(this.x, this.y, this.h/2);
-    stroke(0);
-    strokeWeight(3);
-    fill(255);
-    box(this.w, this.d, this.h);
-    pop();
-  }
-}
-
-class pCaves {
-  constructor(x, y, w, d, h) {
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.d = d;
-    this.h = h;
-  }
-  render() {
-    this.h+=0.001;
-    push();  
-    translate(this.x, this.y, 1000-(this.h/2));
-    if(sd==0) sd=1000-(this.h/2);
-    stroke(0);
-    strokeWeight(3);
-    fill(255);
-    box(this.w, this.d, this.h);
-    pop();
-    
-    push();  
-    translate(this.x, this.y, this.h/2);
-    stroke(0);
-    strokeWeight(3);
-    fill(255);
-    box(this.w, this.d, this.h);
+    push();
+    translate(this.x, 500, this.y);
+    fill(210);
+    ellipsoid(10, 40, 10);
     pop();
   }
 }
 
 function setup() {
   createCanvas(windowWidth, windowHeight, WEBGL);
-
-  // init camera
-  cam_x = -750;
-  cam_y = 0;
-  cam_z = 50;
+    
+  mic = new p5.AudioIn();
+  mic.start();
+  main.loop();
+  
+  noStroke();
+  textureMode(NORMAL);
+  setupCubeMap();
+  cam_x = 0;
+  cam_y = 1500;
+  cam_z = 100;
   cam_dx = 0;
   cam_dy = -1;
   cam_dz = 0;
   
-  pan = PI;
-  tilt = 0;
+  
+  pan = -PI/2;
+  tilt =0.2;
   updateCamCenter();
   
-  for(let i=0; i<70; i++){
-    h=random(50,120);
-    ph=random(5,30);
-    fh=random(200,550);
-    w=random(5,25);
+  for(let i=0; i<20; i++){
     
-    ranx=random(-1450,-550);
-    rany=random(-450,450);
+  let x1=random(-1500,-500);
+  let y1=random(-1500,-500);
+  let x2=random(500,1500);
+  let y2=random(500,1500);
     
-    let b = new Caves(ranx, rany, w, w, h);
-    cvs.push(b);
+    let p1 = new people(x1, y1);
+    let p2 =  new people(x1, y2);
+    let p3 =  new people(x2, y1);
+    let p4 =  new people(x2, y2);
+    pp.push(p1);
+    pp.push(p2);
+    pp.push(p3);
+    pp.push(p4);
     
-    let p = new pCaves(ranx, rany, w, w, ph);
-    pcvs.push(p);
-    
-    let f = new Caves(ranx, rany, w, w, fh);
-    fcvs.push(f);
   }
-
+  
 }
 
 function draw() {
-  background(255);
+  clear();
+  //orbitControl();
 
-  // light set-up
+let high_b = map(high,-100,240,255,0);
+  //let amb_l = map(high,-100,220,0,10000);
   
-  directionalLight(255, 255, 255, 1, -1, 0); // side light
-  directionalLight(255, 255, 255, 0, 1, 0); // side light
-  directionalLight(255, 255, 255, 0, 0, -1); // top light
-  directionalLight(255, 255, 255, 0, -1, -1);
-
-  // camera set-up
+  colorMode(HSB,255);
+  
+  pointLight(100,255,high_b,5000,1000,2000);
+  pointLight(200,255,high_b,-5000,1000,2000);
+  pointLight(50,255,high_b,0,5000,2000);
+  pointLight(250,255,high_b,0,-5000,2000);
   /*
-  cam_bx=constrain(cam_x,-900,900);
-  cam_by=constrain(cam_y,0,100);
-  cam_bz=constrain(cam_z,-50,50);
+  spotLight(120,255,high_b,5000,1000,2000,0,0,0);
+  spotLight(120,255,high_b,-5000,1000,2000,0,0,0);
+  spotLight(120,255,high_b,0,5000,2000,0,0,0);*/
   
-  cam_qx=constrain(cam_cx,-950,950);
-  cam_qy=constrain(cam_cy,0,100);
-  cam_qz=constrain(cam_cz,-100,100);
-  */
+  ambientLight(amb_l);
   
   camera(cam_x, cam_y, cam_z, cam_cx, cam_cy, cam_cz, 0, 0, -1);
-  
-  perspective(radians(60), width / height, 1, 20000);
-  // draw city scene
-  drawCity();
-  if(timeflag==1){
-   drawPastCave();
-  lights();
-  spotLight(0, 200, 50, 0, -500, 1000, 0, -1500, 0, PI/3, 50);
-  }
-  else if(timeflag==2){
-   drawFutureCave();
-  }
-  else drawCave();
-  // handle user input
+  perspective(radians(50), width / height, 1, 20000);
   if (keyIsPressed) handleUserInput();
+  rotateX(-PI/2);
+  
+  let vol = mic.getLevel();
+  let chansong = map(vol, 0, 1, 0, 100);
+  
+  renderPeople();
+  renderTeapot(); // teapot with environment mapping
+  renderSkyBox(); // draw skybox
+  renderBadak();
+  renderPeople();
+  
+  if(vol>0.3){
+  if(flag==0){
+      flag=1;
+  } 
+    /*
+  else {
+    flag=0;
+  }*/
+  }
+  if(flag ==1) {
+    amb_l -= high/100 ;
+    }
+  
+  if(holy_flag==1){
+  main.stop();
+    if(esflag==0){
+      comfy.loop();
+      esflag=1;
+    }
+  }
+  
+}
+
+function renderBadak() {
+  push();
+  rotateX(PI / 2);
+  translate(0,0,-500);
+  texture(badak);
+  plane(5200,5200);
+  pop();
+  
+  push();
+  translate(0,-1500,-2500);
+  texture(wall1);
+  plane(5000,4000);
+  pop();
+  
+  push();
+  translate(0,-1500,2500);
+  texture(wall2);
+  plane(5000,4000);
+  pop();
+  
+  push();
+  rotateY(PI / 2);
+  translate(0,-1500,-2500);
+  texture(wall3);
+  plane(5000,4000);
+  pop();
+  
+  push();
+  rotateY(PI / 2);
+  translate(0,-1500,2500);
+  texture(wall4);
+  plane(5000,4000);
+  pop();
+  
+  /*
+  push();
+  translate(0,0,0);
+  texture(white);
+  cylinder(5000,5000);
+  pop();
+  */
+  
+    // outer cylinde (wall)
+  push(); 
+  translate(0,-1000,0);
+  texture(head);
+  cylinder(3000,5000); 
+  pop();
+  
+  // dome (actually its' cone)
+  push();
+  translate(0,-3000,0);
+  rotateZ(PI);
+  fill(200);
+  texture(con);
+  cone(3000,1500,24,1,false); 
+  pop();
+  
+  push();
+  rotateX(PI / 2);
+  translate(0,0,3000);
+  texture(cunjang);
+  plane(10000,10000);
+  pop();
+
+  /*
+  push();
+  fill(0);
+  translate(x,500,y);
+  ellipsoid(10, 40, 10);
+  pop();
+  */
+}
+  
+function renderTeapot() {
+  shader(envShader);
+  // Using WebGL functions directly to set uniform variable for cubemap texture because p5.js doesn't support cubemap yet
+  texLoc = gl.getUniformLocation(envShader._glProgram, "cubeMap");
+  gl.uniform1i(texLoc, 0);
+  
+  if(flag==1){
+    if (high_flag==0&&high>=-100) {
+    holy_flag=1;
+    high-=0.06;
+    if(high==-100){
+      high_flag=1;
+      flag=0;
+    }
+  }
+  else if(high_flag==1&&high<=235) {
+    holy_flag=1;
+    high+=0.06;
+    if(high==240){
+      high_flag=0;
+      flag=0;
+    }
+   }
+  }
+  
+  push()
+  //rotateY(frameCount * 0.01);
+  //rotateX(PI / 2);
+  scale(10);
+  translate(0,high,0);
+  cylinder(60,300);
+  pop();
+  resetShader();
+}
+
+function setupCubeMap() {
+  // Using WebGL functions directly because p5.js doesn't support cubemap yet
+  gl = this._renderer.GL;
+  tex = gl.createTexture();
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_CUBE_MAP, tex);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, gl.RGBA, gl.RGBA,
+  gl.UNSIGNED_BYTE, img[0].canvas);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, gl.RGBA, gl.RGBA,
+  gl.UNSIGNED_BYTE, img[1].canvas);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, gl.RGBA, gl.RGBA,
+  gl.UNSIGNED_BYTE, img[2].canvas);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, gl.RGBA, gl.RGBA,
+  gl.UNSIGNED_BYTE, img[3].canvas);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, gl.RGBA, gl.RGBA,
+  gl.UNSIGNED_BYTE, img[4].canvas);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, gl.RGBA, gl.RGBA,
+  gl.UNSIGNED_BYTE, img[5].canvas);
+  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+}
+
+// draw skybox as last object to draw only necessary parts
+function renderSkyBox() {
+  shader(skyboxShader);
+  
+  // set uniform variable for cubemap texture
+  texLoc = gl.getUniformLocation(skyboxShader._glProgram, "cubeMap");
+  gl.uniform1i(texLoc, 0);
+  
+  // set z-depth test condition from 'less' to 'less than or equal' to make skybox always pass z-depth test because depth buffer is usually inialized with +1.
+
+  //gl.depthFunc(gl.LEQUAL);
+
+  push();
+  rotateY(frameCount * 0.01);
+  // right
+  beginShape();
+  vertex(1, -1, -1, 0, 0);
+  vertex(1, 1, -1, 0, 1);
+  vertex(1, 1, 1, 1, 1);
+  vertex(1, -1, 1, 1, 0);
+  endShape();
+  
+  //left
+  beginShape();
+  vertex(-1, -1, 1, 0, 0);
+  vertex(-1, 1, 1, 0, 1);
+  vertex(-1, 1, -1, 1, 1);
+  vertex(-1, -1, -1, 1, 0);
+  endShape();
+  
+  // top
+  beginShape();
+  vertex(-1, -1, 1, 0, 0);
+  vertex(-1, -1, -1, 0, 1);
+  vertex(1, -1, -1, 1, 1);
+  vertex(1, -1, 1, 1, 0);
+  endShape();
+  
+  //bottom
+
+  beginShape();
+  vertex(-1, 1, -1, 0, 0);
+  vertex(-1, 1, 1, 0, 1);
+  vertex(1, 1, 1, 1, 1);
+  vertex(1, 1, -1, 1, 0);
+  endShape();
+
+
+
+  //front
+  beginShape();
+  vertex(-1, -1, -1, 0, 0);
+  vertex(-1, 1, -1, 0, 1);
+  vertex(1, 1, -1, 1, 1);
+  vertex(1, -1, -1, 1, 0);
+  endShape();
+
+  // back
+  beginShape();
+  vertex(1, -1, 1, 0, 0);
+  vertex(1, 1, 1, 0, 1);
+  vertex(-1, 1, 1, 1, 1);
+  vertex(-1, -1, 1, 1, 0);
+  endShape();
+  pop();
+  
+
+  // return z-depth test back to default mode
+  //gl.depthFunc(gl.LESS);
+  resetShader();
+}
+
+function holytrigger() {
+  if(flag==0){
+      flag=1;
+  } 
+  else {
+    flag=0;
+  }
 }
 
 function handleUserInput() {
   
-  let s = 10; // moving speed
-  switch (keyCode) {
-    
-    case UP_ARROW: // move forward
-      B.play();
-      songcode=1;
-      break;
-    case DOWN_ARROW: // move backward
-      D.play();
-      if(songcode==1){
-        songcode=2;
-      }
-      break;
-    case LEFT_ARROW: // pan to the left
-      A.play();
-      if(songcode==2){
-        songcode=3;
-      }
-      else songcode=0;
-      break;
-    case RIGHT_ARROW: // pan to the right
-      Ah.play();
-      if(songcode==2){
-        songcode=4;
-      }
-      else songcode=0;
-      break;
-  }
-
-  if(songcode==3){
-    MS.play();
-    timeflag=1;
-  }
-  else if(songcode==4){
-    GS.play();
-    timeflag=2;
-  }
-  
+  let s = 3; // moving speed
   
   switch (key) {
     
@@ -238,20 +416,20 @@ function handleUserInput() {
       cam_y -= s * cam_dy;
       break;
     case 'a':
-      //pan -= 0.05;
-      pan = PI;
+      pan -= 0.005;
+      //pan = PI;
       break;
     case 'd':
-      //pan += 0.05;
-      pan = 0;
+      pan += 0.005;
+      //pan = 0;
       break;
     
     case 'q':
-      tilt += 0.02;
+      tilt += 0.005;
       if (tilt > HALF_PI) tilt = HALF_PI;
       break;
     case 'e':
-      tilt -= 0.02;
+      tilt -= 0.005;
       if (tilt < -HALF_PI) tilt = -HALF_PI;
       break;
       
@@ -271,61 +449,17 @@ function updateCamCenter() {
   cam_cz = cam_z + cam_dz;
 }
 
-function drawCity() {
-  // draw ground
-  noStroke();
-  fill(150);
-  //plane(2 * WORLD_SIZE, 2 * WORLD_SIZE);
-  
-  // draw buildings
-  push();
-  translate(-1000, 0, 500);
-  stroke(0);
-  strokeWeight(3);
-  fill(255);
-  box(1000, 1000, 1000);
-  pop();
-  
-  push();
-  translate(150, 0, 50);
-  stroke(0);
-  strokeWeight(3);
-  fill(255);
-  box(1300, 100, 100);
-  pop();
-  
-  push();
-  translate(900, 0, 100);
-  stroke(0);
-  strokeWeight(3);
-  fill(255);
-  //texture(wall);
-  box(200, 200, 200);
-  pop();
-  
-  push();
-  translate(970, 0, 60);
-  stroke(0);
-  strokeWeight(3);
-  texture(stone);
-  box(30, 80, 120);
-  pop();
+function renderPeople() {
+  for (let p1 of pp) {
+    p1.render();
 }
-
-function drawCave() {
-  for (let b of cvs) {
-    b.render();
-  }
+    for (let p2 of pp) {
+    p2.render();
 }
-
-function drawPastCave() {
-  for (let p of pcvs) {
-    p.render();
-  }
+    for (let p3 of pp) {
+    p3.render();
 }
-
-function drawFutureCave() {
-  for (let f of fcvs) {
-    f.render();
-  }
+    for (let p4 of pp) {
+    p4.render();
+}
 }
